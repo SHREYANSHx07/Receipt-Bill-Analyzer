@@ -320,42 +320,6 @@ class SortView(APIView):
                 {'error': f'Sorting error: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-                
-                for item in yearly_data:
-                    yearly_totals[item['year']] = float(item['total'] or 0)
-            
-            # Prepare response with proper decimal formatting
-            from decimal import ROUND_HALF_UP
-            
-            def format_decimal(value):
-                if value is None:
-                    return None
-                return float(Decimal(str(value)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
-            
-            stats_data = {
-                'total_receipts': total_receipts,
-                'total_amount': format_decimal(total_amount),
-                'average_amount': format_decimal(avg_amount),
-                'median_amount': format_decimal(median_amount),
-                'min_amount': format_decimal(min_amount),
-                'max_amount': format_decimal(max_amount),
-                'category_breakdown': category_breakdown,
-                'vendor_breakdown': vendor_breakdown,
-                'monthly_totals': monthly_totals,
-                'yearly_totals': yearly_totals,
-            }
-            
-            serializer = ReceiptStatsSerializer(data=stats_data)
-            if serializer.is_valid():
-                return Response(serializer.data)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-                
-        except Exception as e:
-            return Response(
-                {'error': f'Error calculating statistics: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
 
 
 @api_view(['GET'])
