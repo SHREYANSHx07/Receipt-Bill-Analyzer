@@ -1,14 +1,31 @@
-Django==4.2.7
-djangorestframework==3.14.0
-django-cors-headers==4.3.1
-Pillow==10.0.1
-pytesseract==0.3.10
-pandas==2.1.3
-numpy==1.24.3
-streamlit==1.28.1
-plotly==5.17.0
-python-dateutil==2.8.2
-pydantic==2.5.0
-requests==2.31.0
-python-multipart==0.0.6
-PyMuPDF==1.23.8 
+# Core Django Backend
+Django>=4.2.0,<5.0.0
+djangorestframework>=3.14.0,<4.0.0
+django-cors-headers>=4.3.0,<5.0.0
+
+# Image Processing
+Pillow>=10.0.0,<11.0.0
+pytesseract>=0.3.10,<1.0.0
+PyMuPDF>=1.23.0,<2.0.0
+
+# Data Processing
+pandas>=2.0.0,<3.0.0
+numpy>=1.24.0,<2.0.0
+python-dateutil>=2.8.0,<3.0.0
+
+# Streamlit Frontend
+streamlit>=1.28.0,<2.0.0
+plotly>=5.17.0,<6.0.0
+
+# HTTP and API
+requests>=2.31.0,<3.0.0
+python-multipart>=0.0.6,<1.0.0
+
+# Data Validation
+pydantic>=2.5.0,<3.0.0
+
+# Additional dependencies for Streamlit Cloud
+markdown-it-py>=3.0.0
+rich>=14.0.0
+pygments>=2.19.0
+mdurl>=0.1.2 
