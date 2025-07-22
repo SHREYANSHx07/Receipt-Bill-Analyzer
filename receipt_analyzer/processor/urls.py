@@ -14,6 +14,9 @@ urlpatterns = [
     # Search functionality
     path('search/', views.SearchView.as_view(), name='search'),
     
+    # Sorting functionality
+    path('sort/', views.SortView.as_view(), name='sort'),
+    
     # Statistics
     path('stats/', views.StatsView.as_view(), name='stats'),
     

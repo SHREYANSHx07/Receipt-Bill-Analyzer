@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db.models import Q, Sum, Avg, Count, Min, Max
 from django.utils import timezone
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import pandas as pd
 import numpy as np
 from decimal import Decimal
@@ -18,6 +18,7 @@ from .serializers import (
     ReceiptStatsSerializer
 )
 from .utils import extract_text_from_file, parse_receipt_data
+from .computational_utils import ComputationalAnalyzer
 
 
 class UploadView(APIView):
@@ -118,128 +119,207 @@ class RecordDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class SearchView(APIView):
-    """Search records with various filters"""
-    
-    def get(self, request):
-        serializer = ReceiptSearchSerializer(data=request.query_params)
-        
-        if serializer.is_valid():
-            queryset = Receipt.objects.all()
-            
-            # Keyword search
-            keyword = serializer.validated_data.get('keyword')
-            if keyword:
-                queryset = queryset.filter(
-                    Q(vendor__icontains=keyword) |
-                    Q(category__icontains=keyword) |
-                    Q(extracted_text__icontains=keyword)
-                )
-            
-            # Amount range filter
-            min_amount = serializer.validated_data.get('min_amount')
-            max_amount = serializer.validated_data.get('max_amount')
-            
-            if min_amount is not None:
-                queryset = queryset.filter(amount__gte=min_amount)
-            if max_amount is not None:
-                queryset = queryset.filter(amount__lte=max_amount)
-            
-            # Date range filter
-            start_date = serializer.validated_data.get('start_date')
-            end_date = serializer.validated_data.get('end_date')
-            
-            if start_date:
-                queryset = queryset.filter(date__gte=start_date)
-            if end_date:
-                queryset = queryset.filter(date__lte=end_date)
-            
-            # Category filter
-            category = serializer.validated_data.get('category')
-            if category:
-                queryset = queryset.filter(category=category)
-            
-            # Serialize results
-            serializer = ReceiptSerializer(queryset, many=True)
-            return Response(serializer.data)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class StatsView(APIView):
-    """Get aggregated statistics"""
+    """Advanced search with computational algorithms"""
     
     def get(self, request):
         try:
-            # Basic statistics
-            total_receipts = Receipt.objects.count()
-            receipts_with_amount = Receipt.objects.exclude(amount__isnull=True)
+            # Get search parameters
+            keyword = request.GET.get('keyword', '').strip()
+            pattern = request.GET.get('pattern', '').strip()
+            search_type = request.GET.get('search_type', 'linear')  # linear, binary, hash, fuzzy
+            search_field = request.GET.get('search_field', 'vendor')
+            min_amount = request.GET.get('min_amount')
+            max_amount = request.GET.get('max_amount')
+            date_from = request.GET.get('date_from')
+            date_to = request.GET.get('date_to')
+            category = request.GET.get('category', '').strip()
+            vendor = request.GET.get('vendor', '').strip()
             
-            if receipts_with_amount.exists():
-                total_amount = receipts_with_amount.aggregate(Sum('amount'))['amount__sum'] or Decimal('0')
-                avg_amount = receipts_with_amount.aggregate(Avg('amount'))['amount__avg'] or Decimal('0')
-                min_amount = receipts_with_amount.aggregate(Min('amount'))['amount__min'] or Decimal('0')
-                max_amount = receipts_with_amount.aggregate(Max('amount'))['amount__max'] or Decimal('0')
-                
-                # Calculate median
-                amounts = list(receipts_with_amount.values_list('amount', flat=True))
-                amounts.sort()
-                n = len(amounts)
-                if n % 2 == 0:
-                    median_amount = (amounts[n//2 - 1] + amounts[n//2]) / 2
-                else:
-                    median_amount = amounts[n//2]
-            else:
-                total_amount = avg_amount = min_amount = max_amount = median_amount = Decimal('0')
+            # Get all records
+            queryset = Receipt.objects.all()
+            records = list(queryset)
             
-            # Category breakdown
-            category_breakdown = {}
-            category_stats = Receipt.objects.values('category').annotate(
-                count=Count('id'),
-                total=Sum('amount')
+            # Convert to list of dictionaries for computational analysis
+            records_data = []
+            for record in records:
+                records_data.append({
+                    'id': record.id,
+                    'vendor': record.vendor,
+                    'date': record.date,
+                    'amount': record.amount,
+                    'category': record.category,
+                    'extracted_text': record.extracted_text,
+                    'confidence_score': record.confidence_score
+                })
+            
+            # Initialize computational analyzer
+            analyzer = ComputationalAnalyzer()
+            
+            # Apply advanced search algorithms
+            results = analyzer.advanced_search(
+                records=records_data,
+                query=keyword if keyword else None,
+                pattern=pattern if pattern else None,
+                field=search_field,
+                search_type=search_type,
+                min_amount=float(min_amount) if min_amount else None,
+                max_amount=float(max_amount) if max_amount else None,
+                date_from=datetime.strptime(date_from, '%Y-%m-%d').date() if date_from else None,
+                date_to=datetime.strptime(date_to, '%Y-%m-%d').date() if date_to else None
             )
-            for stat in category_stats:
-                category_breakdown[stat['category']] = {
-                    'count': stat['count'],
-                    'total': float(stat['total'] or 0)
-                }
             
-            # Vendor breakdown
-            vendor_breakdown = {}
-            vendor_stats = Receipt.objects.values('vendor').annotate(
-                count=Count('id'),
-                total=Sum('amount')
-            ).order_by('-total')[:10]  # Top 10 vendors
-            for stat in vendor_stats:
-                if stat['vendor']:  # Skip None vendors
-                    vendor_breakdown[stat['vendor']] = {
-                        'count': stat['count'],
-                        'total': float(stat['total'] or 0)
-                    }
+            # Apply additional Django ORM filters for efficiency
+            if category:
+                results = [r for r in results if category.lower() in r.get('category', '').lower()]
             
-            # Time series data
-            monthly_totals = {}
-            yearly_totals = {}
+            if vendor:
+                results = [r for r in results if vendor.lower() in r.get('vendor', '').lower()]
             
-            # Get receipts with dates
-            dated_receipts = Receipt.objects.exclude(date__isnull=True)
+            # Convert back to Django queryset for serialization
+            result_ids = [r['id'] for r in results]
+            final_queryset = Receipt.objects.filter(id__in=result_ids)
             
-            if dated_receipts.exists():
-                # Monthly totals
-                monthly_data = dated_receipts.extra(
-                    select={'year_month': "strftime('%Y-%m', date)"}
-                ).values('year_month').annotate(
-                    total=Sum('amount')
-                ).order_by('year_month')
+            # Serialize results
+            serializer = ReceiptSerializer(final_queryset, many=True)
+            return Response(serializer.data)
+            
+        except Exception as e:
+            return Response(
+                {'error': f'Search error: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class StatsView(APIView):
+    """Advanced statistics with computational algorithms"""
+    
+    def get(self, request):
+        try:
+            # Get all records for computational analysis
+            queryset = Receipt.objects.all()
+            records = list(queryset)
+            
+            # Convert to list of dictionaries for computational analysis
+            records_data = []
+            for record in records:
+                records_data.append({
+                    'id': record.id,
+                    'vendor': record.vendor,
+                    'date': record.date,
+                    'amount': record.amount,
+                    'category': record.category,
+                    'extracted_text': record.extracted_text,
+                    'confidence_score': record.confidence_score
+                })
+            
+            # Initialize computational analyzer
+            analyzer = ComputationalAnalyzer()
+            
+            # Calculate comprehensive aggregations using computational algorithms
+            aggregations = analyzer.calculate_aggregations(records_data)
+            
+            # Basic statistics using computational functions
+            total_receipts = len(records_data)
+            receipts_with_amount = [r for r in records_data if r.get('amount') is not None]
+            
+            if receipts_with_amount:
+                # Use computational aggregation functions
+                total_amount = analyzer.aggregation_functions.calculate_sum(records_data, 'amount')
+                mean_amount = analyzer.aggregation_functions.calculate_mean(records_data, 'amount')
+                median_amount = analyzer.aggregation_functions.calculate_median(records_data, 'amount')
+                mode_amount = analyzer.aggregation_functions.calculate_mode(records_data, 'amount')
                 
-                for item in monthly_data:
-                    monthly_totals[item['year_month']] = float(item['total'] or 0)
-                
-                # Yearly totals
-                yearly_data = dated_receipts.extra(
-                    select={'year': "strftime('%Y', date)"}
-                ).values('year').annotate(
-                    total=Sum('amount')
-                ).order_by('year')
+                # Get min/max from statistical summary
+                stats_summary = aggregations['statistical_summary']
+                min_amount = stats_summary.get('min', Decimal('0'))
+                max_amount = stats_summary.get('max', Decimal('0'))
+                std_dev = stats_summary.get('std_dev')
+                variance = stats_summary.get('variance')
+            else:
+                total_amount = mean_amount = median_amount = mode_amount = min_amount = max_amount = Decimal('0')
+                std_dev = variance = None
+            
+            # Format response with computational results
+            response_data = {
+                'total_receipts': total_receipts,
+                'total_amount': float(total_amount),
+                'mean_amount': float(mean_amount) if mean_amount else 0,
+                'median_amount': float(median_amount) if median_amount else 0,
+                'mode_amount': float(mode_amount) if mode_amount else 0,
+                'min_amount': float(min_amount) if min_amount else 0,
+                'max_amount': float(max_amount) if max_amount else 0,
+                'std_deviation': float(std_dev) if std_dev else None,
+                'variance': float(variance) if variance else None,
+                'category_breakdown': aggregations['category_frequency'],
+                'vendor_breakdown': aggregations['vendor_frequency'],
+                'monthly_trends': aggregations['monthly_trends'],
+                'sliding_window_average': aggregations['sliding_window_average']
+            }
+            
+            return Response(response_data)
+            
+        except Exception as e:
+            return Response(
+                {'error': f'Statistics error: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class SortView(APIView):
+    """Sort records using computational algorithms"""
+    
+    def get(self, request):
+        try:
+            # Get sorting parameters
+            field = request.GET.get('field', 'date')
+            algorithm = request.GET.get('algorithm', 'timsort')  # timsort, quicksort, mergesort, heapsort
+            reverse = request.GET.get('reverse', 'false').lower() == 'true'
+            
+            # Get all records
+            queryset = Receipt.objects.all()
+            records = list(queryset)
+            
+            # Convert to list of dictionaries for computational analysis
+            records_data = []
+            for record in records:
+                records_data.append({
+                    'id': record.id,
+                    'vendor': record.vendor,
+                    'date': record.date,
+                    'amount': record.amount,
+                    'category': record.category,
+                    'extracted_text': record.extracted_text,
+                    'confidence_score': record.confidence_score
+                })
+            
+            # Initialize computational analyzer
+            analyzer = ComputationalAnalyzer()
+            
+            # Sort records using computational algorithms
+            sorted_records = analyzer.sort_records(
+                records=records_data,
+                field=field,
+                algorithm=algorithm,
+                reverse=reverse
+            )
+            
+            # Convert back to Django queryset for serialization
+            result_ids = [r['id'] for r in sorted_records]
+            final_queryset = Receipt.objects.filter(id__in=result_ids)
+            
+            # Maintain sort order
+            id_order = {id_val: index for index, id_val in enumerate(result_ids)}
+            final_queryset = sorted(final_queryset, key=lambda x: id_order[x.id])
+            
+            # Serialize results
+            serializer = ReceiptSerializer(final_queryset, many=True)
+            return Response(serializer.data)
+            
+        except Exception as e:
+            return Response(
+                {'error': f'Sorting error: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
                 
                 for item in yearly_data:
                     yearly_totals[item['year']] = float(item['total'] or 0)
