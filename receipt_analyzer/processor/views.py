@@ -256,6 +256,35 @@ class StatsView(APIView):
                 'sliding_window_average': aggregations['sliding_window_average']
             }
             
+            # Convert simple frequency distributions to expected format
+            if response_data['category_breakdown']:
+                formatted_category_breakdown = {}
+                for category, count in response_data['category_breakdown'].items():
+                    # Calculate total amount for this category
+                    category_total = sum(
+                        float(record['amount']) for record in records_data 
+                        if record.get('category') == category and record.get('amount') is not None
+                    )
+                    formatted_category_breakdown[category] = {
+                        'count': count,
+                        'total': category_total
+                    }
+                response_data['category_breakdown'] = formatted_category_breakdown
+            
+            if response_data['vendor_breakdown']:
+                formatted_vendor_breakdown = {}
+                for vendor, count in response_data['vendor_breakdown'].items():
+                    # Calculate total amount for this vendor
+                    vendor_total = sum(
+                        float(record['amount']) for record in records_data 
+                        if record.get('vendor') == vendor and record.get('amount') is not None
+                    )
+                    formatted_vendor_breakdown[vendor] = {
+                        'count': count,
+                        'total': vendor_total
+                    }
+                response_data['vendor_breakdown'] = formatted_vendor_breakdown
+            
             return Response(response_data)
             
         except Exception as e:

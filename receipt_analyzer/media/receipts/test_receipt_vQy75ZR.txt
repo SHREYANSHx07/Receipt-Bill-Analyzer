@@ -1,4 +1,0 @@
-Receipt Test
-Date: 2024-01-01
-Amount: .00
-Vendor: Test Store

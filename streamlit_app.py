@@ -635,18 +635,18 @@ def analytics_dashboard():
             # Key metrics
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("Total Receipts", stats['total_receipts'])
+                st.metric("Total Receipts", stats.get('total_receipts', 0))
             with col2:
                 # Handle float values directly
-                total_amount = stats['total_amount'] or 0.0
+                total_amount = stats.get('total_amount', 0.0) or 0.0
                 st.metric("Total Amount", f"${total_amount:,.2f}")
             with col3:
                 # Handle float values directly
-                avg_amount = stats['average_amount'] or 0.0
+                avg_amount = stats.get('mean_amount', 0.0) or 0.0
                 st.metric("Average Amount", f"${avg_amount:,.2f}")
             with col4:
                 # Handle float values directly
-                median_amount = stats['median_amount'] or 0.0
+                median_amount = stats.get('median_amount', 0.0) or 0.0
                 st.metric("Median Amount", f"${median_amount:,.2f}")
             
             # Charts
@@ -654,9 +654,9 @@ def analytics_dashboard():
             
             with col1:
                 st.subheader("📈 Category Breakdown")
-                if stats['category_breakdown']:
+                if stats.get('category_breakdown'):
                     category_data = pd.DataFrame([
-                        {'Category': k.title(), 'Count': v['count'], 'Total': v['total']}
+                        {'Category': k.title(), 'Count': v.get('count', 0), 'Total': v.get('total', 0)}
                         for k, v in stats['category_breakdown'].items()
                     ])
                     
@@ -667,12 +667,14 @@ def analytics_dashboard():
                         title="Spending by Category"
                     )
                     st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("No category data available")
             
             with col2:
                 st.subheader("🏪 Top Vendors")
-                if stats['vendor_breakdown']:
+                if stats.get('vendor_breakdown'):
                     vendor_data = pd.DataFrame([
-                        {'Vendor': k, 'Total': v['total']}
+                        {'Vendor': k, 'Total': v.get('total', 0)}
                         for k, v in stats['vendor_breakdown'].items()
                     ])
                     
@@ -684,13 +686,15 @@ def analytics_dashboard():
                     )
                     fig.update_xaxes(tickangle=45)
                     st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("No vendor data available")
             
             # Time series analysis
             st.subheader("📅 Spending Trends")
-            if stats['monthly_totals']:
+            if stats.get('monthly_trends'):
                 monthly_data = pd.DataFrame([
                     {'Month': k, 'Total': v}
-                    for k, v in stats['monthly_totals'].items()
+                    for k, v in stats['monthly_trends'].items()
                 ])
                 monthly_data['Month'] = pd.to_datetime(monthly_data['Month'] + '-01')
                 monthly_data = monthly_data.sort_values('Month')
@@ -702,12 +706,14 @@ def analytics_dashboard():
                     title="Monthly Spending Trends"
                 )
                 st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("No monthly trend data available")
             
             # Amount distribution
             st.subheader("💰 Amount Distribution")
             try:
-                min_amount = stats['min_amount'] or 0.0
-                max_amount = stats['max_amount'] or 0.0
+                min_amount = stats.get('min_amount', 0.0) or 0.0
+                max_amount = stats.get('max_amount', 0.0) or 0.0
                 if min_amount > 0 and max_amount > 0:
                     # Create a histogram-like visualization
                     ranges = [
