@@ -330,3 +330,13 @@ def clear_all_data(request):
         return Response({
             'error': f'Error deleting data: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+def health_check(request):
+    """Simple health check endpoint"""
+    return Response({
+        'status': 'healthy',
+        'message': 'Backend is running',
+        'timestamp': timezone.now().isoformat()
+    })

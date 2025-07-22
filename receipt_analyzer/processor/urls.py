@@ -22,4 +22,7 @@ urlpatterns = [
     
     # Data management
     path('clear/', views.clear_all_data, name='clear_all_data'),
+    
+    # Health check
+    path('health/', views.health_check, name='health_check'),
 ] 
