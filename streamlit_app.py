@@ -64,12 +64,34 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Configuration
-API_BASE_URL = os.getenv('API_BASE_URL', 'http://localhost:8000/api')
+API_BASE_URL = os.getenv('API_BASE_URL', 'https://web-production-e532c.up.railway.app/api')
+
+def check_backend_health():
+    """Check if backend is healthy and accessible"""
+    try:
+        response = requests.get(f"{API_BASE_URL}/stats/", timeout=5)
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                return True, data
+            except json.JSONDecodeError:
+                return False, "Invalid JSON response"
+        else:
+            return False, f"HTTP {response.status_code}: {response.text}"
+    except requests.exceptions.ConnectionError:
+        return False, "Connection refused - backend not running"
+    except requests.exceptions.Timeout:
+        return False, "Request timeout"
+    except Exception as e:
+        return False, str(e)
 
 def make_api_request(endpoint, method="GET", data=None, files=None):
     """Make API request to backend"""
     try:
         url = f"{API_BASE_URL}/{endpoint}"
+        
+        # Debug information
+        st.sidebar.write(f"🔗 Connecting to: {url}")
         
         if method == "GET":
             response = requests.get(url, params=data, timeout=10)
@@ -82,17 +104,29 @@ def make_api_request(endpoint, method="GET", data=None, files=None):
         else:
             return None
         
+        # Debug response
+        st.sidebar.write(f"📊 Status: {response.status_code}")
+        
         if response.status_code in [200, 201]:
-            return response.json()
+            try:
+                return response.json()
+            except json.JSONDecodeError as e:
+                st.error(f"JSON Parse Error: {str(e)}")
+                st.error(f"Response content: {response.text[:200]}")
+                return None
         else:
             st.error(f"API Error: {response.status_code} - {response.text}")
             return None
             
-    except requests.exceptions.RequestException as e:
-        st.error(f"Connection Error: {str(e)}")
+    except requests.exceptions.ConnectionError as e:
+        st.error(f"❌ Connection Error: Backend not reachable")
+        st.error(f"Check if backend is running at: {API_BASE_URL}")
+        return None
+    except requests.exceptions.Timeout as e:
+        st.error(f"⏰ Timeout: Backend not responding")
         return None
     except Exception as e:
-        st.error(f"Error: {str(e)}")
+        st.error(f"❌ Error: {str(e)}")
         return None
 
 def upload_file():
@@ -605,6 +639,79 @@ def clear_all_data():
         except:
             st.metric("Current Records", "Unknown")
 
+def connection_test():
+    """Test backend connection and diagnose issues"""
+    st.header("🔧 Connection Test")
+    
+    st.info("This page helps diagnose connection issues with your backend API.")
+    
+    # Current configuration
+    st.subheader("📋 Current Configuration")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write(f"**API Base URL:** {API_BASE_URL}")
+    with col2:
+        st.write(f"**Environment:** {os.getenv('API_BASE_URL', 'Not set')}")
+    
+    # Test connection
+    st.subheader("🧪 Connection Test")
+    if st.button("🔍 Test Connection", type="primary"):
+        with st.spinner("Testing connection..."):
+            is_healthy, message = check_backend_health()
+            
+            if is_healthy:
+                st.success("✅ Backend is healthy!")
+                st.json(message)
+            else:
+                st.error(f"❌ Backend issue: {message}")
+    
+    # Manual test
+    st.subheader("🔧 Manual Testing")
+    test_endpoint = st.text_input("Test endpoint:", value="stats/")
+    
+    if st.button("📡 Test Endpoint"):
+        with st.spinner("Testing..."):
+            result = make_api_request(test_endpoint)
+            if result:
+                st.success("✅ Endpoint working!")
+                st.json(result)
+            else:
+                st.error("❌ Endpoint failed")
+    
+    # Troubleshooting guide
+    st.subheader("🛠️ Troubleshooting Guide")
+    
+    with st.expander("Common Issues & Solutions"):
+        st.markdown("""
+        ### 1. Connection Refused
+        - **Cause**: Backend not running
+        - **Solution**: Deploy your Django backend to Railway/Render/Heroku
+        
+        ### 2. Wrong API URL
+        - **Cause**: Incorrect API_BASE_URL
+        - **Solution**: Check environment variables in Streamlit Cloud
+        
+        ### 3. CORS Issues
+        - **Cause**: Backend not allowing cross-origin requests
+        - **Solution**: Ensure CORS is configured in Django settings
+        
+        ### 4. Empty Response
+        - **Cause**: Backend returning empty JSON
+        - **Solution**: Check Django logs for errors
+        
+        ### 5. Timeout
+        - **Cause**: Backend taking too long to respond
+        - **Solution**: Check backend performance and database
+        """)
+    
+    # Environment check
+    st.subheader("🌍 Environment Check")
+    st.code(f"""
+    API_BASE_URL = {API_BASE_URL}
+    Python Version = {sys.version}
+    Streamlit Version = {st.__version__}
+    """)
+
 def main():
     """Main application"""
     st.markdown('<h1 class="main-header">📊 Receipt & Bill Analyzer</h1>', unsafe_allow_html=True)
@@ -613,7 +720,7 @@ def main():
     st.sidebar.title("Navigation")
     page = st.sidebar.selectbox(
         "Choose a page",
-        ["Upload", "View Records", "Search", "Analytics", "Edit Records", "Export", "Clear Data"]
+        ["Upload", "View Records", "Search", "Analytics", "Edit Records", "Export", "Clear Data", "Connection Test"]
     )
     
     # Page routing
@@ -631,6 +738,8 @@ def main():
         export_data()
     elif page == "Clear Data":
         clear_all_data()
+    elif page == "Connection Test":
+        connection_test()
     
     # Footer
     st.sidebar.markdown("---")
@@ -651,10 +760,21 @@ def main():
         response = requests.get(f"{API_BASE_URL}/stats/", timeout=5)
         if response.status_code == 200:
             st.sidebar.success("✅ Backend Connected")
+            try:
+                data = response.json()
+                st.sidebar.info(f"📊 Records: {data.get('total_receipts', 0)}")
+            except:
+                st.sidebar.warning("⚠️ Response not JSON")
         else:
-            st.sidebar.error("❌ Backend Error")
-    except:
-        st.sidebar.error("❌ Backend Unavailable")
+            st.sidebar.error(f"❌ Backend Error: {response.status_code}")
+            st.sidebar.error(f"Response: {response.text[:100]}")
+    except requests.exceptions.ConnectionError:
+        st.sidebar.error("❌ Backend Unreachable")
+        st.sidebar.info(f"URL: {API_BASE_URL}")
+    except requests.exceptions.Timeout:
+        st.sidebar.error("⏰ Backend Timeout")
+    except Exception as e:
+        st.sidebar.error(f"❌ Error: {str(e)}")
     
     st.sidebar.markdown("**Data Privacy**")
     st.sidebar.info("All data is processed locally and stored securely in your database.")
