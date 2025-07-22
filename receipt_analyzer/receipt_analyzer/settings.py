@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', '7(_4n7no^8cy3ct%kq-yyg=uci%d=7^)hu+n6+r@dr_t2oiu92')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     'localhost', 
@@ -90,8 +90,7 @@ WSGI_APPLICATION = 'receipt_analyzer.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-import dj_database_url
-
+# Database configuration
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -99,10 +98,17 @@ DATABASES = {
     }
 }
 
-# Update database configuration from $DATABASE_URL
+# Try to use production database if available
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
-    DATABASES['default'] = dj_database_url.parse(DATABASE_URL)
+    try:
+        import dj_database_url
+        DATABASES['default'] = dj_database_url.parse(DATABASE_URL)
+    except ImportError:
+        # Use SQLite if dj_database_url is not available
+        pass
+
+
 
 
 # Password validation

@@ -824,14 +824,27 @@ def export_data():
         
         if st.button(f"📊 Export as {export_format}", type="primary"):
             with st.spinner(f"Exporting data as {export_format}..."):
-                result = make_api_request(f"export/?format={export_format.lower()}")
+                # Use path parameters instead of query parameters
+                if export_format == "CSV":
+                    result = make_api_request("export/csv/")
+                else:
+                    result = make_api_request("export/json/")
                 
                 if result:
                     if export_format == "CSV":
+                        # Handle new CSV response format
+                        if isinstance(result, dict) and 'csv_content' in result:
+                            csv_content = result['csv_content']
+                            filename = result.get('filename', 'receipts_export.csv')
+                        else:
+                            # Fallback for old format
+                            csv_content = result
+                            filename = "receipts_export.csv"
+                        
                         st.download_button(
                             label="Download CSV",
-                            data=result,
-                            file_name="receipts_export.csv",
+                            data=csv_content,
+                            file_name=filename,
                             mime="text/csv"
                         )
                     else:

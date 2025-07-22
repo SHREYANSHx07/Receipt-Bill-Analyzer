@@ -354,9 +354,27 @@ class SortView(APIView):
 @api_view(['GET'])
 def export_data(request):
     """Export data as CSV or JSON"""
+    print(f"DEBUG: Export function called")
+    print(f"DEBUG: Query params: {request.query_params}")
+    print(f"DEBUG: GET params: {request.GET}")
+    print(f"DEBUG: Request method: {request.method}")
+    print(f"DEBUG: Request path: {request.path}")
+    
+    # Try different ways to get the format parameter
     format_type = request.query_params.get('format', 'json').lower()
+    if not format_type or format_type == 'json':
+        format_type = request.GET.get('format', 'json').lower()
+    
+    # Check if format is in the URL path
+    if 'csv' in request.path:
+        format_type = 'csv'
+    elif 'json' in request.path:
+        format_type = 'json'
+    
+    print(f"DEBUG: Export requested with format: {format_type}")
     
     if format_type not in ['json', 'csv']:
+        print(f"DEBUG: Invalid format: {format_type}")
         return Response(
             {'error': 'Invalid format. Use "json" or "csv"'},
             status=status.HTTP_400_BAD_REQUEST
@@ -366,23 +384,38 @@ def export_data(request):
         receipts = Receipt.objects.all()
         data = ReceiptSerializer(receipts, many=True).data
         
+        print(f"DEBUG: Found {len(data)} records to export")
+        
         if format_type == 'json':
             return Response(data)
         else:  # CSV
             import csv
-            from django.http import HttpResponse
+            import io
             
-            response = HttpResponse(content_type='text/csv')
-            response['Content-Disposition'] = 'attachment; filename="receipts.csv"'
+            print("DEBUG: Processing CSV export")
             
+            # Create CSV content in memory
+            output = io.StringIO()
             if data:
-                writer = csv.DictWriter(response, fieldnames=data[0].keys())
+                writer = csv.DictWriter(output, fieldnames=data[0].keys())
                 writer.writeheader()
                 writer.writerows(data)
             
+            csv_content = output.getvalue()
+            output.close()
+            
+            print(f"DEBUG: CSV content length: {len(csv_content)}")
+            
+            # Return CSV as JSON response with proper headers
+            response = Response({
+                'csv_content': csv_content,
+                'filename': 'receipts.csv'
+            })
+            response['Content-Type'] = 'application/json'
             return response
             
     except Exception as e:
+        print(f"DEBUG: Export error: {str(e)}")
         return Response(
             {'error': f'Error exporting data: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR

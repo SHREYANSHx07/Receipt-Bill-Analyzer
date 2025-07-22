@@ -22,6 +22,8 @@ urlpatterns = [
     
     # Export functionality
     path('export/', views.export_data, name='export'),
+    path('export/csv/', views.export_data, name='export_csv'),
+    path('export/json/', views.export_data, name='export_json'),
     
     # Data management
     path('clear/', views.clear_all_data, name='clear_all_data'),
