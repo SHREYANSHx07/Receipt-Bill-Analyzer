@@ -36,37 +36,24 @@ A full-stack application for analyzing receipts and bills with Django backend an
 1. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
+   pip install -r requirements-backend.txt
    ```
 
-2. **Run the application:**
-   ```bash
-   python start_app.py
-   ```
-
-3. **Access the application:**
-   - Frontend: http://localhost:8501
-   - Backend API: http://localhost:8000/api/
-
-### Manual Setup
-
-1. **Setup Django backend:**
+2. **Setup Django backend:**
    ```bash
    cd receipt_analyzer
    python manage.py migrate
    python manage.py runserver
    ```
 
-2. **Run Streamlit frontend (in a new terminal):**
+3. **Run Streamlit frontend (in a new terminal):**
    ```bash
-   streamlit run frontend/app.py
+   streamlit run streamlit_app.py
    ```
 
-### Testing
-
-Run the test script to verify everything is working:
-```bash
-python test_setup.py
-```
+4. **Access the application:**
+   - Frontend: http://localhost:8501
+   - Backend API: http://localhost:8000/api/
 
 ## API Documentation
 
@@ -146,10 +133,14 @@ Manual labels are given 100% confidence and override automatic detection.
 │   │   ├── utils.py          # OCR and parsing utilities
 │   │   └── urls.py           # URL routing
 │   └── manage.py
-├── frontend/                  # Streamlit frontend
-│   └── app.py                # Main Streamlit app
-├── requirements.txt           # Python dependencies
-└── README.md                 # This file
+├── streamlit_app.py          # Main Streamlit application
+├── requirements.txt          # Frontend dependencies (Streamlit)
+├── requirements-backend.txt  # Backend dependencies (Django)
+├── Procfile                 # Railway/Heroku deployment
+├── runtime.txt              # Python version specification
+├── .streamlit/              # Streamlit configuration
+│   └── config.toml         # Streamlit deployment settings
+└── README.md               # This file
 ```
 
 ## Data Privacy
