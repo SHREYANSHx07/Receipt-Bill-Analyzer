@@ -20,39 +20,48 @@ st.set_page_config(
     page_title="Receipt & Bill Analyzer",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://github.com/SHREYANSHx07/Receipt-Bill-Analyzer',
+        'Report a bug': 'https://github.com/SHREYANSHx07/Receipt-Bill-Analyzer/issues',
+        'About': '# Receipt & Bill Analyzer\n\nTransform your receipts into actionable insights with AI-powered analysis.'
+    }
 )
 
-# Professional Color Palette CSS
+# Dark Theme CSS
 st.markdown("""
 <style>
-/* Professional Color Scheme - Based on Telecom Design */
+/* Dark Theme Color Scheme */
 :root {
-    --primary-green: #4CAF50;          /* Vibrant green for CTAs */
-    --primary-purple: #4B0082;         /* Deep purple for branding */
-    --primary-purple-light: #6A0DAD;   /* Lighter purple for accents */
-    --text-dark: #262626;              /* Dark grey for main text */
-    --text-secondary: #64748b;         /* Medium grey for secondary text */
-    --background-white: #FFFFFF;        /* Pure white background */
-    --background-light: #f8fafc;       /* Light grey background */
-    --border-color: #e2e8f0;           /* Light border color */
+    --primary-green: #10b981;          /* Vibrant green for CTAs */
+    --primary-purple: #8b5cf6;         /* Purple for branding */
+    --primary-purple-light: #a78bfa;   /* Lighter purple for accents */
+    --text-light: #f8fafc;             /* Light text for dark background */
+    --text-secondary: #94a3b8;         /* Medium grey for secondary text */
+    --background-dark: #0f172a;         /* Dark background */
+    --background-card: #1e293b;         /* Card background */
+    --background-sidebar: #334155;      /* Sidebar background */
+    --border-color: #334155;            /* Border color */
     --success-color: #10b981;          /* Success green */
     --warning-color: #f59e0b;          /* Warning amber */
     --error-color: #ef4444;            /* Error red */
+    --hover-color: #475569;             /* Hover state color */
 }
 
 /* Global Styles */
 .stApp {
-    background: var(--background-white);
+    background: var(--background-dark);
     min-height: 100vh;
+    color: var(--text-light);
 }
 
 .main .block-container {
-    background: var(--background-white);
-    border-radius: 8px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    background: var(--background-card);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     margin: 20px;
     padding: 2rem;
+    border: 1px solid var(--border-color);
 }
 
 /* Header Styling */
@@ -63,6 +72,7 @@ st.markdown("""
     font-weight: 700;
     margin-bottom: 1rem;
     letter-spacing: -0.025em;
+    text-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
 }
 
 .sub-header {
@@ -75,118 +85,132 @@ st.markdown("""
 
 /* Sidebar Styling */
 .sidebar .sidebar-content {
-    background: var(--background-light);
-    border-radius: 8px;
+    background: var(--background-sidebar);
+    border-radius: 12px;
     padding: 1rem;
     margin: 10px;
+    border: 1px solid var(--border-color);
 }
 
 /* Card Styling */
 .metric-container {
-    background: var(--background-white);
+    background: var(--background-card);
     padding: 1.25rem;
-    border-radius: 8px;
+    border-radius: 12px;
     border: 1px solid var(--border-color);
     margin: 0.75rem 0;
-    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    color: var(--text-light);
 }
 
 .metric-container:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    border-color: var(--primary-purple);
 }
 
 /* Success Banner */
 .success-banner {
-    background: #f0f9ff;
-    border: 1px solid var(--primary-green);
-    border-radius: 8px;
+    background: linear-gradient(135deg, #065f46, #047857);
+    border: 1px solid var(--success-color);
+    border-radius: 12px;
     padding: 1rem;
     margin: 0.75rem 0;
-    box-shadow: 0 2px 4px -1px rgba(76, 175, 80, 0.1);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    color: var(--text-light);
 }
 
 /* Warning Banner */
 .warning-banner {
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    background: linear-gradient(135deg, #92400e, #b45309);
     border: 2px solid var(--warning-color);
     border-radius: 12px;
     padding: 1.5rem;
     margin: 1rem 0;
-    box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.1);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+    color: var(--text-light);
 }
 
 /* Error Banner */
 .error-banner {
-    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    background: linear-gradient(135deg, #7f1d1d, #991b1b);
     border: 2px solid var(--error-color);
     border-radius: 12px;
     padding: 1.5rem;
     margin: 1rem 0;
-    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    color: var(--text-light);
 }
 
 /* Button Styling */
 .stButton > button {
-    background: var(--primary-green);
+    background: linear-gradient(135deg, var(--primary-green), #059669);
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     color: white;
     font-weight: 600;
     padding: 0.75rem 1.5rem;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px -1px rgba(76, 175, 80, 0.3);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .stButton > button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px -2px rgba(76, 175, 80, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+    background: linear-gradient(135deg, #059669, var(--primary-green));
 }
 
 /* File Upload Styling */
 .stFileUploader {
     border: 2px dashed var(--border-color);
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 1.5rem;
     text-align: center;
-    background: var(--background-light);
-    transition: all 0.2s ease;
+    background: var(--background-card);
+    transition: all 0.3s ease;
+    color: var(--text-light);
 }
 
 .stFileUploader:hover {
     border-color: var(--primary-green);
-    background: #f0f9ff;
+    background: var(--hover-color);
+    transform: translateY(-1px);
 }
 
 /* Table Styling */
 .dataframe {
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    background: var(--background-card);
+    color: var(--text-light);
 }
 
 /* Chart Container */
 .chart-container {
-    background: var(--background-white);
-    border-radius: 8px;
+    background: var(--background-card);
+    border-radius: 12px;
     padding: 1.25rem;
     margin: 0.75rem 0;
-    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
 }
 
 /* Progress Bar */
 .stProgress > div > div > div {
-    background: var(--primary-green);
+    background: linear-gradient(90deg, var(--primary-green), #059669);
 }
 
 /* Sidebar Navigation */
 .sidebar-nav {
-    background: var(--background-white);
-    border-radius: 8px;
+    background: var(--background-card);
+    border-radius: 12px;
     padding: 1rem;
     margin: 0.5rem 0;
-    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    color: var(--text-light);
 }
 
 /* Status Indicators */
@@ -200,12 +224,76 @@ st.markdown("""
 
 .status-online {
     background: var(--success-color);
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+    animation: pulse 2s infinite;
 }
 
 .status-offline {
     background: var(--error-color);
-    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3);
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* Streamlit Component Overrides */
+.stSelectbox > div > div {
+    background: var(--background-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-light);
+}
+
+.stTextInput > div > div > input {
+    background: var(--background-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-light);
+}
+
+.stTextArea > div > div > textarea {
+    background: var(--background-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-light);
+}
+
+.stNumberInput > div > div > input {
+    background: var(--background-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-light);
+}
+
+/* Metric Cards */
+[data-testid="metric-container"] {
+    background: var(--background-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-light);
+}
+
+/* Plotly Chart Dark Theme */
+.js-plotly-plot {
+    background: var(--background-card);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--background-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--hover-color);
 }
 
 /* Responsive Design */
@@ -659,7 +747,13 @@ def analytics_dashboard():
                         category_data, 
                         values='Total', 
                         names='Category',
-                        title="Spending by Category"
+                        title="Spending by Category",
+                        color_discrete_sequence=px.colors.qualitative.Set3
+                    )
+                    fig.update_layout(
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        font=dict(color='#f8fafc')
                     )
                     st.plotly_chart(fig, use_container_width=True)
             
@@ -675,7 +769,16 @@ def analytics_dashboard():
                         vendor_data.head(10), 
                         x='Vendor', 
                         y='Total',
-                        title="Top 10 Vendors by Spending"
+                        title="Top 10 Vendors by Spending",
+                        color='Total',
+                        color_continuous_scale='viridis'
+                    )
+                    fig.update_layout(
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        font=dict(color='#f8fafc'),
+                        xaxis=dict(gridcolor='#334155'),
+                        yaxis=dict(gridcolor='#334155')
                     )
                     fig.update_xaxes(tickangle=45)
                     st.plotly_chart(fig, use_container_width=True)
@@ -694,7 +797,15 @@ def analytics_dashboard():
                     monthly_data, 
                     x='Month', 
                     y='Total',
-                    title="Monthly Spending Trends"
+                    title="Monthly Spending Trends",
+                    color_discrete_sequence=['#10b981']
+                )
+                fig.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    font=dict(color='#f8fafc'),
+                    xaxis=dict(gridcolor='#334155'),
+                    yaxis=dict(gridcolor='#334155')
                 )
                 st.plotly_chart(fig, use_container_width=True)
             
@@ -714,12 +825,18 @@ def analytics_dashboard():
                     fig.add_trace(go.Bar(
                         x=[f"${r[0]}-${r[1] if r[1] != float('inf') else '∞'}" for r in ranges],
                         y=[0] * len(ranges),  # Placeholder - would need actual data
-                        name="Amount Ranges"
+                        name="Amount Ranges",
+                        marker_color='#8b5cf6'
                     ))
                     fig.update_layout(
                         title="Receipt Amount Distribution",
                         xaxis_title="Amount Range",
-                        yaxis_title="Number of Receipts"
+                        yaxis_title="Number of Receipts",
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        font=dict(color='#f8fafc'),
+                        xaxis=dict(gridcolor='#334155'),
+                        yaxis=dict(gridcolor='#334155')
                     )
                     st.plotly_chart(fig, use_container_width=True)
                 else:
