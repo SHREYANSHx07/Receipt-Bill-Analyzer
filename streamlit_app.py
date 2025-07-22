@@ -11,6 +11,7 @@ import plotly.graph_objects as go
 import requests
 import json
 import time
+import sys
 from datetime import datetime, timedelta
 import os
 
@@ -22,49 +23,207 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for better styling
+# Professional Color Palette CSS
 st.markdown("""
 <style>
+/* Professional Color Scheme - Based on Telecom Design */
+:root {
+    --primary-green: #4CAF50;          /* Vibrant green for CTAs */
+    --primary-purple: #4B0082;         /* Deep purple for branding */
+    --primary-purple-light: #6A0DAD;   /* Lighter purple for accents */
+    --text-dark: #262626;              /* Dark grey for main text */
+    --text-secondary: #64748b;         /* Medium grey for secondary text */
+    --background-white: #FFFFFF;        /* Pure white background */
+    --background-light: #f8fafc;       /* Light grey background */
+    --border-color: #e2e8f0;           /* Light border color */
+    --success-color: #10b981;          /* Success green */
+    --warning-color: #f59e0b;          /* Warning amber */
+    --error-color: #ef4444;            /* Error red */
+}
+
+/* Global Styles */
+.stApp {
+    background: var(--background-white);
+    min-height: 100vh;
+}
+
+.main .block-container {
+    background: var(--background-white);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    margin: 20px;
+    padding: 2rem;
+}
+
+/* Header Styling */
 .main-header {
     text-align: center;
-    color: #1f77b4;
+    color: var(--primary-purple);
     font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    letter-spacing: -0.025em;
+}
+
+.sub-header {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
     margin-bottom: 2rem;
-    font-weight: bold;
+    font-weight: 400;
 }
 
+/* Sidebar Styling */
 .sidebar .sidebar-content {
-    background-color: #f0f2f6;
-}
-
-.metric-container {
-    background-color: #ffffff;
+    background: var(--background-light);
+    border-radius: 8px;
     padding: 1rem;
-    border-radius: 0.5rem;
-    border: 1px solid #e0e0e0;
-    margin: 0.5rem 0;
+    margin: 10px;
 }
 
+/* Card Styling */
+.metric-container {
+    background: var(--background-white);
+    padding: 1.25rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    margin: 0.75rem 0;
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.metric-container:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* Success Banner */
 .success-banner {
-    background-color: #d4edda;
-    border: 1px solid #c3e6cb;
-    border-radius: 5px;
-    padding: 15px;
-    margin: 10px 0;
+    background: #f0f9ff;
+    border: 1px solid var(--primary-green);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 0.75rem 0;
+    box-shadow: 0 2px 4px -1px rgba(76, 175, 80, 0.1);
 }
 
+/* Warning Banner */
 .warning-banner {
-    background-color: #fff3cd;
-    border: 1px solid #ffeaa7;
-    border-radius: 5px;
-    padding: 15px;
-    margin: 10px 0;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 2px solid var(--warning-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.1);
+}
+
+/* Error Banner */
+.error-banner {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    border: 2px solid var(--error-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1);
+}
+
+/* Button Styling */
+.stButton > button {
+    background: var(--primary-green);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px -1px rgba(76, 175, 80, 0.3);
+}
+
+.stButton > button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px -2px rgba(76, 175, 80, 0.4);
+}
+
+/* File Upload Styling */
+.stFileUploader {
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    background: var(--background-light);
+    transition: all 0.2s ease;
+}
+
+.stFileUploader:hover {
+    border-color: var(--primary-green);
+    background: #f0f9ff;
+}
+
+/* Table Styling */
+.dataframe {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Chart Container */
+.chart-container {
+    background: var(--background-white);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin: 0.75rem 0;
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Progress Bar */
+.stProgress > div > div > div {
+    background: var(--primary-green);
+}
+
+/* Sidebar Navigation */
+.sidebar-nav {
+    background: var(--background-white);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Status Indicators */
+.status-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.status-online {
+    background: var(--success-color);
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.status-offline {
+    background: var(--error-color);
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-header {
+        font-size: 2rem;
+    }
+    
+    .main .block-container {
+        margin: 10px;
+        padding: 1rem;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
 
 # Configuration
-API_BASE_URL = os.getenv('API_BASE_URL', 'https://web-production-e532c.up.railway.app/api')
+API_BASE_URL = os.getenv('API_BASE_URL', 'http://localhost:8000/api')
 
 def check_backend_health():
     """Check if backend is healthy and accessible"""
@@ -130,10 +289,28 @@ def make_api_request(endpoint, method="GET", data=None, files=None):
         return None
 
 def upload_file():
-    """Upload and parse receipt files"""
-    st.header("📤 Upload Receipt")
+    """Upload and parse receipt files with enhanced visual design"""
     
-    # File upload
+    # Professional header with clean design
+    st.markdown("""
+    <div style="background: var(--background-light); 
+                padding: 2rem; border-radius: 8px; margin-bottom: 2rem; border-left: 4px solid var(--primary-purple);">
+        <h1 style="color: var(--primary-purple); text-align: center; margin: 0; font-size: 2.5rem; font-weight: 700;">📤 Upload Receipt</h1>
+        <p style="color: var(--text-secondary); text-align: center; margin: 0.5rem 0 0 0; font-size: 1.1rem;">
+            Upload your receipts and let AI extract the important information
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Professional file upload section
+    st.markdown("""
+    <div style="background: var(--background-white); padding: 1.5rem; border-radius: 8px; 
+                border: 1px solid var(--border-color); margin: 1rem 0;">
+        <h3 style="color: var(--text-dark); text-align: center; margin-bottom: 1rem; font-weight: 600;">📁 Choose Your Receipt</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # File upload with enhanced styling
     uploaded_file = st.file_uploader(
         "Choose a receipt file",
         type=['jpg', 'jpeg', 'png', 'pdf', 'txt'],
@@ -141,27 +318,52 @@ def upload_file():
     )
     
     if uploaded_file is not None:
-        # Display file info
+        # Enhanced file info display
         file_details = {
             "Filename": uploaded_file.name,
             "File size": f"{uploaded_file.size / 1024:.1f} KB",
             "File type": uploaded_file.type
         }
         
+        # Professional file details card
+        st.markdown("""
+        <div style="background: var(--background-light); 
+                    padding: 1.25rem; border-radius: 8px; margin: 1rem 0; border-left: 3px solid var(--primary-green);">
+            <h3 style="color: var(--text-dark); margin: 0 0 1rem 0; font-weight: 600;">📋 File Information</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
         col1, col2 = st.columns(2)
         with col1:
-            st.write("**File Details:**")
+            # Professional file details display
             for key, value in file_details.items():
-                st.write(f"• {key}: {value}")
+                st.markdown(f"""
+                <div style="background: var(--background-white); padding: 0.75rem; border-radius: 6px; 
+                            margin: 0.5rem 0; border-left: 3px solid var(--primary-green);">
+                    <div style="font-weight: 600; color: var(--text-dark);">{key}</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">{value}</div>
+                </div>
+                """, unsafe_allow_html=True)
         
         with col2:
-            # Show preview for images
+            # Professional image preview
             if uploaded_file.type and uploaded_file.type.startswith('image'):
-                st.image(uploaded_file, caption="File Preview", use_column_width=True)
+                st.markdown("""
+                <div style="background: var(--background-white); padding: 1rem; border-radius: 8px; 
+                            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1); border-left: 3px solid var(--primary-purple);">
+                    <h4 style="color: var(--text-dark); margin: 0 0 0.5rem 0; font-weight: 600;">🖼️ File Preview</h4>
+                </div>
+                """, unsafe_allow_html=True)
+                st.image(uploaded_file, caption="File Preview", use_container_width=True)
         
-        # Manual labeling section
-        st.subheader("🏷️ Manual Labeling (Optional)")
-        st.info("💡 **Tip**: You can manually label your receipt to override automatic categorization.")
+        # Professional manual labeling section
+        st.markdown("""
+        <div style="background: var(--background-light); 
+                    padding: 1.25rem; border-radius: 8px; margin: 1rem 0; border-left: 3px solid var(--primary-purple);">
+            <h3 style="color: var(--text-dark); margin: 0 0 0.5rem 0; font-weight: 600;">🏷️ Manual Labeling (Optional)</h3>
+            <p style="color: var(--text-secondary); margin: 0;">💡 <strong>Tip</strong>: You can manually label your receipt to override automatic categorization.</p>
+        </div>
+        """, unsafe_allow_html=True)
         
         category_options = {
             "": "Auto-detect (recommended)",
@@ -175,6 +377,7 @@ def upload_file():
             "other": "📄 Other"
         }
         
+        # Enhanced category selection
         selected_category = st.selectbox(
             "Choose a category (optional):",
             options=list(category_options.keys()),
@@ -182,7 +385,12 @@ def upload_file():
             help="Leave as 'Auto-detect' to let the system categorize automatically"
         )
         
-        if st.button("🚀 Upload & Parse Receipt", type="primary"):
+        # Enhanced upload button
+        st.markdown("""
+        <div style="text-align: center; margin: 2rem 0;">
+        """, unsafe_allow_html=True)
+        
+        if st.button("🚀 Upload & Parse Receipt", type="primary", use_container_width=True):
             with st.spinner("Processing receipt..."):
                 files = {'file': uploaded_file}
                 data = {}
@@ -192,41 +400,87 @@ def upload_file():
                 result = make_api_request("upload/", method="POST", files=files, data=data)
                 
                 if result:
-                    st.success("🎉 **File Uploaded Successfully!**")
+                    # Professional success banner
                     banner_message = "Your receipt has been processed and stored successfully!"
                     if selected_category:
                         banner_message += f" 📝 Manually labeled as: {category_options[selected_category]}"
                     
                     st.markdown(f"""
-                    <div class="success-banner">
-                        <h4 style="color: #155724; margin: 0;">✅ Upload Complete</h4>
-                        <p style="color: #155724; margin: 5px 0;">{banner_message}</p>
+                    <div style="background: #f0f9ff; 
+                                border: 1px solid var(--primary-green); border-radius: 8px; 
+                                padding: 1.25rem; margin: 1rem 0; text-align: center;">
+                        <h3 style="color: var(--primary-green); margin: 0 0 0.5rem 0; font-weight: 700;">🎉 Upload Complete!</h3>
+                        <p style="color: var(--text-dark); margin: 0;">{banner_message}</p>
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    # Display parsed data
+                    # Professional parsed data display
+                    st.markdown("""
+                    <div style="background: var(--background-light); 
+                                padding: 1.25rem; border-radius: 8px; margin: 1rem 0; border-left: 3px solid var(--primary-purple);">
+                        <h3 style="color: var(--text-dark); margin: 0 0 1rem 0; font-weight: 600;">📊 Extracted Information</h3>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Professional metrics display
                     col1, col2, col3, col4 = st.columns(4)
                     with col1:
-                        st.metric("Vendor", result.get('vendor', 'N/A'))
+                        st.markdown(f"""
+                        <div style="background: var(--background-white); padding: 1rem; border-radius: 6px; 
+                                    border-left: 3px solid var(--primary-purple); text-align: center;">
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);">Vendor</div>
+                            <div style="font-size: 1.2rem; font-weight: bold; color: var(--text-dark);">{result.get('vendor', 'N/A')}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
                     with col2:
-                        st.metric("Amount", result.get('amount', 'N/A'))
+                        st.markdown(f"""
+                        <div style="background: var(--background-white); padding: 1rem; border-radius: 6px; 
+                                    border-left: 3px solid var(--primary-green); text-align: center;">
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);">Amount</div>
+                            <div style="font-size: 1.2rem; font-weight: bold; color: var(--text-dark);">{result.get('amount', 'N/A')}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
                     with col3:
-                        st.metric("Date", result.get('date', 'N/A'))
+                        st.markdown(f"""
+                        <div style="background: var(--background-white); padding: 1rem; border-radius: 6px; 
+                                    border-left: 3px solid var(--warning-color); text-align: center;">
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);">Date</div>
+                            <div style="font-size: 1.2rem; font-weight: bold; color: var(--text-dark);">{result.get('date', 'N/A')}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
                     with col4:
-                        st.metric("Category", result.get('category', 'N/A').title())
+                        st.markdown(f"""
+                        <div style="background: var(--background-white); padding: 1rem; border-radius: 6px; 
+                                    border-left: 3px solid var(--primary-purple-light); text-align: center;">
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);">Category</div>
+                            <div style="font-size: 1.2rem; font-weight: bold; color: var(--text-dark);">{result.get('category', 'N/A').title()}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
                     
-                    # Confidence score
+                    # Professional confidence score
                     confidence = result.get('confidence_score', 0)
+                    st.markdown("""
+                    <div style="background: var(--background-white); padding: 1rem; border-radius: 6px; margin: 1rem 0; border-left: 3px solid var(--primary-green);">
+                        <div style="font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem;">🎯 Confidence Score</div>
+                    </div>
+                    """, unsafe_allow_html=True)
                     st.progress(confidence)
-                    st.caption(f"Confidence Score: {confidence:.1%}")
+                    st.caption(f"AI Confidence: {confidence:.1%}")
                     
-                    # Quick actions
+                    # Professional quick actions
+                    st.markdown("""
+                    <div style="background: var(--background-light); 
+                                padding: 1.25rem; border-radius: 8px; margin: 1rem 0; border-left: 3px solid var(--primary-purple);">
+                        <h4 style="color: var(--text-dark); margin: 0 0 1rem 0; font-weight: 600;">🚀 Quick Actions</h4>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
                     col1, col2 = st.columns(2)
                     with col1:
-                        if st.button("📋 View All Records"):
+                        if st.button("📋 View All Records", use_container_width=True):
                             st.switch_page("View Records")
                     with col2:
-                        if st.button("📊 View Analytics"):
+                        if st.button("📊 View Analytics", use_container_width=True):
                             st.switch_page("Analytics")
                 else:
                     st.error("❌ Failed to upload file. Please try again.")
@@ -713,71 +967,162 @@ def connection_test():
     """)
 
 def main():
-    """Main application"""
-    st.markdown('<h1 class="main-header">📊 Receipt & Bill Analyzer</h1>', unsafe_allow_html=True)
+    """Main application with enhanced visual design"""
     
-    # Sidebar navigation
-    st.sidebar.title("Navigation")
+    # Enhanced header with gradient and better typography
+    st.markdown('<h1 class="main-header">📊 Receipt & Bill Analyzer</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="sub-header">Transform your receipts into actionable insights with AI-powered analysis</p>', unsafe_allow_html=True)
+    
+    # Professional sidebar with clean design
+    st.sidebar.markdown("""
+    <div style="background: var(--primary-purple); 
+                padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        <h3 style="color: white; text-align: center; margin: 0; font-weight: 600;">🧭 Navigation</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Enhanced page selection with icons
     page = st.sidebar.selectbox(
         "Choose a page",
-        ["Upload", "View Records", "Search", "Analytics", "Edit Records", "Export", "Clear Data", "Connection Test"]
+        ["📤 Upload", "📋 View Records", "🔍 Search", "📊 Analytics", "✏️ Edit Records", "💾 Export", "🗑️ Clear Data", "🔧 Connection Test"]
     )
     
-    # Page routing
-    if page == "Upload":
+    # Remove icons from page name for routing
+    page_clean = page.split(" ", 1)[1] if " " in page else page
+    
+    # Page routing with clean page names
+    if page_clean == "Upload":
         upload_file()
-    elif page == "View Records":
+    elif page_clean == "View Records":
         view_records()
-    elif page == "Search":
+    elif page_clean == "Search":
         search_records()
-    elif page == "Analytics":
+    elif page_clean == "Analytics":
         analytics_dashboard()
-    elif page == "Edit Records":
+    elif page_clean == "Edit Records":
         edit_records()
-    elif page == "Export":
+    elif page_clean == "Export":
         export_data()
-    elif page == "Clear Data":
+    elif page_clean == "Clear Data":
         clear_all_data()
-    elif page == "Connection Test":
+    elif page_clean == "Connection Test":
         connection_test()
     
-    # Footer
+    # Enhanced footer with better visual design
     st.sidebar.markdown("---")
     
-    # Show current record count
+    # Professional status section
+    st.sidebar.markdown("""
+    <div style="background: var(--background-light); 
+                padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+        <h4 style="color: var(--text-dark); margin: 0 0 0.5rem 0; font-weight: 600;">📊 System Status</h4>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Show current record count with enhanced styling
     try:
         records_response = make_api_request("records/")
         if records_response and 'results' in records_response:
             current_count = len(records_response['results'])
-            st.sidebar.metric("📊 Total Records", current_count)
+            st.sidebar.markdown(f"""
+            <div style="background: var(--background-white); padding: 1rem; border-radius: 6px; 
+                        border-left: 3px solid var(--primary-green); margin: 0.5rem 0;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-green);">{current_count}</div>
+                <div style="color: var(--text-secondary); font-size: 0.9rem;">Total Records</div>
+            </div>
+            """, unsafe_allow_html=True)
     except:
-        st.sidebar.metric("📊 Total Records", "Unknown")
+        st.sidebar.markdown("""
+        <div style="background: var(--background-white); padding: 1rem; border-radius: 6px; 
+                    border-left: 3px solid var(--warning-color); margin: 0.5rem 0;">
+            <div style="font-size: 1.5rem; font-weight: bold; color: var(--warning-color);">Unknown</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">Total Records</div>
+        </div>
+        """, unsafe_allow_html=True)
     
-    st.sidebar.markdown("**API Status**")
+    # Enhanced API status with visual indicators
+    st.sidebar.markdown("**🔗 API Status**")
     
-    # Check API connection
+    # Check API connection with enhanced visual feedback
     try:
         response = requests.get(f"{API_BASE_URL}/stats/", timeout=5)
         if response.status_code == 200:
-            st.sidebar.success("✅ Backend Connected")
+            st.sidebar.markdown("""
+            <div style="background: #f0f9ff; 
+                        padding: 0.75rem; border-radius: 6px; margin: 0.5rem 0; border-left: 3px solid var(--primary-green);">
+                <div style="display: flex; align-items: center;">
+                    <span style="background: var(--primary-green); width: 8px; height: 8px; 
+                                 border-radius: 50%; margin-right: 0.5rem;"></span>
+                    <span style="color: var(--primary-green); font-weight: 600;">✅ Backend Connected</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
             try:
                 data = response.json()
-                st.sidebar.info(f"📊 Records: {data.get('total_receipts', 0)}")
+                st.sidebar.markdown(f"""
+                <div style="background: var(--background-white); padding: 0.75rem; border-radius: 6px; 
+                            margin: 0.5rem 0; border-left: 3px solid var(--primary-purple);">
+                    <div style="color: var(--text-dark); font-weight: 600;">📊 {data.get('total_receipts', 0)} Records</div>
+                </div>
+                """, unsafe_allow_html=True)
             except:
                 st.sidebar.warning("⚠️ Response not JSON")
         else:
-            st.sidebar.error(f"❌ Backend Error: {response.status_code}")
-            st.sidebar.error(f"Response: {response.text[:100]}")
+            st.sidebar.markdown(f"""
+            <div style="background: #fef2f2; 
+                        padding: 0.75rem; border-radius: 6px; margin: 0.5rem 0; border-left: 3px solid var(--error-color);">
+                <div style="display: flex; align-items: center;">
+                    <span style="background: var(--error-color); width: 8px; height: 8px; 
+                                 border-radius: 50%; margin-right: 0.5rem;"></span>
+                    <span style="color: var(--error-color); font-weight: 600;">❌ Backend Error: {response.status_code}</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
     except requests.exceptions.ConnectionError:
-        st.sidebar.error("❌ Backend Unreachable")
-        st.sidebar.info(f"URL: {API_BASE_URL}")
+        st.sidebar.markdown(f"""
+        <div style="background: #fef2f2; 
+                    padding: 0.75rem; border-radius: 6px; margin: 0.5rem 0; border-left: 3px solid var(--error-color);">
+            <div style="display: flex; align-items: center;">
+                <span style="background: var(--error-color); width: 8px; height: 8px; 
+                             border-radius: 50%; margin-right: 0.5rem;"></span>
+                <span style="color: var(--error-color); font-weight: 600;">❌ Backend Unreachable</span>
+            </div>
+            <div style="color: var(--error-color); font-size: 0.8rem; margin-top: 0.25rem;">URL: {API_BASE_URL}</div>
+        </div>
+        """, unsafe_allow_html=True)
     except requests.exceptions.Timeout:
-        st.sidebar.error("⏰ Backend Timeout")
+        st.sidebar.markdown("""
+        <div style="background: #fffbeb; 
+                    padding: 0.75rem; border-radius: 6px; margin: 0.5rem 0; border-left: 3px solid var(--warning-color);">
+            <div style="display: flex; align-items: center;">
+                <span style="background: var(--warning-color); width: 8px; height: 8px; 
+                             border-radius: 50%; margin-right: 0.5rem;"></span>
+                <span style="color: var(--warning-color); font-weight: 600;">⏰ Backend Timeout</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     except Exception as e:
-        st.sidebar.error(f"❌ Error: {str(e)}")
+        st.sidebar.markdown(f"""
+        <div style="background: #fef2f2; 
+                    padding: 0.75rem; border-radius: 6px; margin: 0.5rem 0; border-left: 3px solid var(--error-color);">
+            <div style="display: flex; align-items: center;">
+                <span style="background: var(--error-color); width: 8px; height: 8px; 
+                             border-radius: 50%; margin-right: 0.5rem;"></span>
+                <span style="color: var(--error-color); font-weight: 600;">❌ Error: {str(e)[:30]}...</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
-    st.sidebar.markdown("**Data Privacy**")
-    st.sidebar.info("All data is processed locally and stored securely in your database.")
+    # Professional privacy notice
+    st.sidebar.markdown("""
+    <div style="background: var(--background-light); 
+                padding: 1rem; border-radius: 8px; margin: 1rem 0; border-left: 3px solid var(--primary-purple);">
+        <h4 style="color: var(--text-dark); margin: 0 0 0.5rem 0; font-weight: 600;">🔒 Data Privacy</h4>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+            All data is processed locally and stored securely in your database.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main() 

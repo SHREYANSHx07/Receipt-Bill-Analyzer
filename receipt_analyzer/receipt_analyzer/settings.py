@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-d-o9qv#a7ti)m3tpn9f&qr@d_61=a)y$*w#g)zgkf2a5-^-7w3'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     'localhost', 
@@ -160,8 +160,8 @@ REST_FRAMEWORK = {
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Production Security Settings
-SECURE_SSL_REDIRECT = True
+# Production Security Settings (disabled for local development)
+SECURE_SSL_REDIRECT = False
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
@@ -170,6 +170,6 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
 
-# Session and CSRF security
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+# Session and CSRF security (disabled for local development)
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
